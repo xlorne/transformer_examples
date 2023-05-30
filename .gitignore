@@ -14,6 +14,7 @@ dist
 .idea
 *.swp
 
+
 # Other
 .DS_Store
 wandb
@@ -22,3 +23,7 @@ output
 # Data
 *.pkl
 *.csv
+
+# ignore
+data
+models

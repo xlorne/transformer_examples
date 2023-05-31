@@ -8,12 +8,13 @@ import torchvision
 import torchvision.transforms as transforms
 
 from cifar10_model import Net
+from cifar10_model_resnet import ResNet18
 
 os.environ['HTTP_PROXY'] = 'http://127.0.0.1:7890'
 os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:7890'
 
-batch_size = 4
-epochs = 100
+batch_size = 32
+epochs = 10
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -37,7 +38,7 @@ classes = ('plane', 'car', 'bird', 'cat',
 
 
 # 实例化网络
-net = Net().to(device)
+net = ResNet18().to(device)
 
 
 # 定义损失函数和优化器

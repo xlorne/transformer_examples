@@ -4,7 +4,7 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 
-from cifar10_model import Net
+from cifar10_model_resnet import ResNet18
 
 os.environ['HTTP_PROXY'] = 'http://127.0.0.1:7890'
 os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:7890'
@@ -13,10 +13,13 @@ transform = transforms.Compose(
     [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 
+batch_size = 64
+
+
 testset = torchvision.datasets.CIFAR10(root='./data', train=False,
                                        download=True, transform=transform)
 
-testloader = torch.utils.data.DataLoader(testset, batch_size=4,
+testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                          shuffle=False, num_workers=2)
 
 classes = ('plane', 'car', 'bird', 'cat',
@@ -24,7 +27,7 @@ classes = ('plane', 'car', 'bird', 'cat',
 
 
 # 创建一个新的模型实例
-model = Net()
+model = ResNet18()
 # 加载模型参数
 model.load_state_dict(torch.load('./models/model.pth'))
 # 设置模型为评估模式
@@ -43,5 +46,4 @@ with torch.no_grad():
         total += labels.size(0)
         correct += (predicted == labels).sum().item()
 
-print('Accuracy of the network on the 10000 test images: %d %%' % (
-    100 * correct / total))
+print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))

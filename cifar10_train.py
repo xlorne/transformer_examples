@@ -7,8 +7,9 @@ import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 
-from cifar10_model import Net
-from cifar10_model_resnet import ResNet18
+# from cifar10_model import Net
+# from cifar10_model_resnet import ResNet18
+from cifar10_resnet_pretrained import ResNet18
 
 os.environ['HTTP_PROXY'] = 'http://127.0.0.1:7890'
 os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:7890'
@@ -40,7 +41,7 @@ classes = ('plane', 'car', 'bird', 'cat',
 # 实例化网络
 net = ResNet18().to(device)
 
-net.load_state_dict(torch.load('./models/model.pth'))
+# net.load_state_dict(torch.load('./models/model.pth'))
 
 # 定义损失函数和优化器
 criterion = nn.CrossEntropyLoss()

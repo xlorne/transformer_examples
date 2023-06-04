@@ -3,6 +3,13 @@ import requests
 import pytz
 import matplotlib.pyplot as plt
 
+proxy = 'http://127.0.0.1:7890'
+
+proxies = {
+    'http': proxy,
+    'https': proxy
+}
+
 
 def data_format(data):
     data = pd.DataFrame(data)
@@ -26,7 +33,7 @@ def data_format(data):
 
 def get_candles(symbol, bar, limit):
     url = "https://www.okex.com/api/v5/market/candles?instId=%s&bar=%s&limit=%s" % (symbol, bar, limit)
-    response = requests.get(url)
+    response = requests.get(url, proxies=proxies)
     data = response.json()['data']
     return data_format(data)
 
@@ -36,7 +43,7 @@ def get_history_candles(symbol, bar, limit, after):
         url = "https://www.okex.com/api/v5/market/history-candles?instId=%s&bar=%s&limit=%s" % (symbol, bar, limit)
     else:
         url = "https://www.okex.com/api/v5/market/history-candles?instId=%s&bar=%s&limit=%s&after=%s" % (symbol, bar, limit, after)
-    response = requests.get(url)
+    response = requests.get(url, proxies=proxies)
     data = response.json()['data']
     return data_format(data)
 

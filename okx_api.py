@@ -2,6 +2,7 @@ import pandas as pd
 import requests
 import pytz
 import matplotlib.pyplot as plt
+import time
 
 proxy = 'http://127.0.0.1:7890'
 
@@ -43,9 +44,13 @@ def get_history_candles(symbol, bar, limit, after):
         url = "https://www.okex.com/api/v5/market/history-candles?instId=%s&bar=%s&limit=%s" % (symbol, bar, limit)
     else:
         url = "https://www.okex.com/api/v5/market/history-candles?instId=%s&bar=%s&limit=%s&after=%s" % (symbol, bar, limit, after)
-    response = requests.get(url, proxies=proxies)
-    data = response.json()['data']
-    return data_format(data)
+    try:
+        response = requests.get(url, proxies=proxies)
+        data = response.json()['data']
+        return data_format(data)
+    except Exception as e:
+        time.sleep(3)
+        return get_history_candles(symbol, bar, limit, after)
 
 
 def fetch_candles(symbol, bar, limit, max_epoch=0, callback=None):
@@ -88,7 +93,7 @@ if __name__ == '__main__':
     symbol = 'BTC-USDT'
     bar = '1m'
     limit = 100
-    max_epoch = 10
+    max_epoch = 100
 
     def callback(x):
         data.append(x)

@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.optim as optim
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler
 from torch import nn
 from torch.nn import Transformer
 from torch.utils.data import TensorDataset, DataLoader
@@ -22,9 +22,11 @@ def show(y_test, y_pred_test,title='Stock Prediction Price'):
     # 还原目标值
     if y_test is not None:
         y_test_inverse = scaler_y.inverse_transform(y_test.cpu().numpy().reshape(-1, 1)).flatten()
+        # y_test = y_test.cpu().numpy().flatten()
         plt.plot(y_test_inverse, color='blue', label='Actual closing price')
     if y_pred_test is not None:
         y_pred_inverse = scaler_y.inverse_transform(y_pred_test.cpu().numpy().reshape(-1, 1)).flatten()
+        # y_pred_test = y_pred_test.cpu().numpy().flatten()
         plt.plot(y_pred_inverse, color='red', label='Predicted closing price')
     plt.title(title)
     plt.xlabel('Time')
@@ -88,7 +90,7 @@ class StockPredictor(nn.Module):
 
 feature_size = len(features)
 num_heads = feature_size  # 设置 num_heads 为 feature_size
-num_layers = 3
+num_layers = 2
 dropout = 0.2
 model = StockPredictor(feature_size, num_heads, num_layers, dropout)
 model.to(device)
@@ -100,7 +102,7 @@ loss_fn = nn.MSELoss()
 optimizer = optim.Adam(model.parameters())
 
 # 模型训练
-epochs = 200
+epochs = 100
 for epoch in range(epochs):
     model.train()
     total_loss = 0

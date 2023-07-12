@@ -1,6 +1,9 @@
+import sys
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from tqdm import tqdm
 
 # 参数定义
 input_vocab_size = 1000
@@ -26,7 +29,8 @@ class SimpleTransformer(nn.Module):
                  dim_feedforward):
         super(SimpleTransformer, self).__init__()
 
-        # 是 PyTorch 中的一个模块，用于实现词嵌入（word embedding）。词嵌入是将离散的词汇（通常表示为 one-hot 向量）映射到连续的向量空间中的低维向量表示。
+        # 是 PyTorch 中的一个模块，用于实现词嵌入（word embedding）。
+        # 词嵌入是将离散的词汇（通常表示为 one-hot 向量）映射到连续的向量空间中的低维向量表示。
         # 这种向量表示可以捕捉词汇之间的语义关系，如相似性、类比等。在自然语言处理任务中，词嵌入通常作为神经网络的输入层来使用。
         self.encoder_embedding = nn.Embedding(input_vocab_size, d_model)
         self.decoder_embedding = nn.Embedding(output_vocab_size, d_model)
@@ -64,15 +68,21 @@ tgt_input = torch.randint(0, output_vocab_size, (max_seq_length, batch_size)).to
 tgt_output = torch.cat((tgt_input[1:], torch.zeros(1, batch_size, dtype=torch.long, device=device)), dim=0).to(
     device)
 
+print("Start Training...")
 # 训练
-for epoch in range(num_epochs):
-    optimizer.zero_grad()
+with tqdm(total=num_epochs, desc="Epoch", file=sys.stdout) as pbar:
+    for epoch in range(num_epochs):
+        optimizer.zero_grad()
 
-    predictions = model(src, tgt_input)
-    loss = criterion(predictions.reshape(-1, predictions.size(-1)), tgt_output.reshape(-1))
-    loss.backward()
-    optimizer.step()
+        predictions = model(src, tgt_input)
+        loss = criterion(predictions.reshape(-1, predictions.size(-1)), tgt_output.reshape(-1))
+        loss.backward()
+        optimizer.step()
 
-    print("Epoch: {}/{}, Loss: {:.4f}".format(epoch + 1, num_epochs, loss.item()))
+        # print("Epoch: {}/{}, Loss: {:.4f}".format(epoch + 1, num_epochs, loss.item()))
+        pbar.set_postfix(loss="{:.4f}".format(loss.item()))
+        pbar.update()
+
+print("Training Done!")
 
 

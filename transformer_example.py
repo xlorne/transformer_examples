@@ -1,5 +1,5 @@
 import sys
-
+import time
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -69,6 +69,7 @@ tgt_output = torch.cat((tgt_input[1:], torch.zeros(1, batch_size, dtype=torch.lo
     device)
 
 print("Start Training...")
+start = time.time()
 # 训练
 with tqdm(total=num_epochs, desc="Epoch", file=sys.stdout) as pbar:
     for epoch in range(num_epochs):
@@ -82,7 +83,7 @@ with tqdm(total=num_epochs, desc="Epoch", file=sys.stdout) as pbar:
         # print("Epoch: {}/{}, Loss: {:.4f}".format(epoch + 1, num_epochs, loss.item()))
         pbar.set_postfix(loss="{:.4f}".format(loss.item()))
         pbar.update()
-
-print("Training Done!")
+over = time.time()
+print("Training Done! Time elapse: {:.2f}s".format(over - start))
 
 

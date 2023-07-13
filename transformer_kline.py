@@ -1,12 +1,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import sys
 import torch
 import torch.optim as optim
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler
 from torch import nn
 from torch.nn import Transformer
 from torch.utils.data import TensorDataset, DataLoader
+from tqdm import tqdm
 
 # 数据读取
 data = pd.read_csv('data.csv')
@@ -103,25 +105,26 @@ optimizer = optim.Adam(model.parameters())
 
 # 模型训练
 epochs = 100
-for epoch in range(epochs):
-    model.train()
-    total_loss = 0
-    for X_batch, y_batch in train_loader:
-        X_batch = X_batch.to(device)
-        y_batch = y_batch.to(device)
+with tqdm(total=epochs, desc="Epoch", file=sys.stdout) as pbar:
+    for epoch in range(epochs):
+        model.train()
+        total_loss = 0
+        for X_batch, y_batch in train_loader:
+            X_batch = X_batch.to(device)
+            y_batch = y_batch.to(device)
 
-        optimizer.zero_grad()
-        y_pred = model(X_batch)
-        loss = loss_fn(y_pred.squeeze(), y_batch)
-        loss.backward()
-        optimizer.step()
+            optimizer.zero_grad()
+            y_pred = model(X_batch)
+            loss = loss_fn(y_pred.squeeze(), y_batch)
+            loss.backward()
+            optimizer.step()
 
-        total_loss += loss.item() * X_batch.size(0)
+            total_loss += loss.item() * X_batch.size(0)
 
-    average_loss = total_loss / len(train_loader.dataset)
+        average_loss = total_loss / len(train_loader.dataset)
 
-    if (epoch + 1) % 10 == 0:
-        print(f'Epoch {epoch + 1}/{epochs}, Loss: {average_loss}')
+        pbar.set_postfix(loss="{:.4f}".format(average_loss))
+        pbar.update()
 
 # 模型评估
 model.eval()

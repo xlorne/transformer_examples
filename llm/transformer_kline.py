@@ -11,7 +11,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from tqdm import tqdm
 
 # 数据读取
-data = pd.read_csv('data.csv')
+data = pd.read_csv('../data.csv')
 data = data.drop(columns=['|', 'Date'])  # 删除无关列
 
 

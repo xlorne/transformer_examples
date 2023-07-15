@@ -1,15 +1,3 @@
-import os
-proxy = 'http://127.0.0.1:7890'
-
-proxies = {
-    'http': proxy,
-    'https': proxy
-}
-
-os.environ['HTTP_PROXY'] = proxy
-os.environ['HTTPS_PROXY'] = proxy
-os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
-
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 tokenizer = AutoTokenizer.from_pretrained("/code/lorne/models/vicuna-13b-v1.3")

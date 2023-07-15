@@ -12,11 +12,11 @@ os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-tokenizer = AutoTokenizer.from_pretrained("lmsys/vicuna-13b-v1.3")
+tokenizer = AutoTokenizer.from_pretrained("/code/lorne/models/vicuna-13b-v1.3")
 
 # print(tokenizer)
 
-model = AutoModelForCausalLM.from_pretrained("lmsys/vicuna-13b-v1.3")
+model = AutoModelForCausalLM.from_pretrained("/code/lorne/models/vicuna-13b-v1.3")
 
 input_context = "The weather is really nice. " \
                 "The sky is clear. I am very happy today. " \

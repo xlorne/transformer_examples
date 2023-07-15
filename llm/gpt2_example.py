@@ -1,22 +1,10 @@
-import os
-proxy = 'http://127.0.0.1:7890'
-
-proxies = {
-    'http': proxy,
-    'https': proxy
-}
-
-os.environ['HTTP_PROXY'] = proxy
-os.environ['HTTPS_PROXY'] = proxy
-os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
-
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-tokenizer = AutoTokenizer.from_pretrained("gpt2")
+tokenizer = AutoTokenizer.from_pretrained("/code/lorne/models/gpt2")
 
 # print(tokenizer)
 
-model = AutoModelForCausalLM.from_pretrained("gpt2")
+model = AutoModelForCausalLM.from_pretrained("/code/lorne/models/gpt2")
 
 input_context = "The weather is really nice. " \
                 "The sky is clear. I am very happy today. " \

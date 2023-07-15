@@ -5,3 +5,4 @@ timm==0.9.2
 scikit_learn==1.2.2
 protobuf
 transformers[torch]
+sentencepiece

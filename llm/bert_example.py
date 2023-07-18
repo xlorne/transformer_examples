@@ -9,6 +9,8 @@ model = AutoModelForMaskedLM.from_pretrained("bert-base-chinese")
 model = model.to(device)
 model = model.eval()
 
+print(model)
+
 # 输入文本，其中[MASK]表示需要预测的词
 input_text = "你好，我是小明，现在是一名程[MASK]员，很高心认[MASK]你，听说你曾经也是[MASK][MASK][MASK]。"
 

@@ -1,15 +1,18 @@
+import torch
 from transformers import AutoTokenizer, AutoModelForMaskedLM
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 tokenizer = AutoTokenizer.from_pretrained("bert-base-chinese")
 
 model = AutoModelForMaskedLM.from_pretrained("bert-base-chinese")
-
+model = model.to(device)
 model = model.eval()
 
 # 输入文本，其中[MASK]表示需要预测的词
 input_text = "你好，我是小明，现在是一名程[MASK]员，很高心认[MASK]你，听说你曾经也是[MASK][MASK][MASK]。"
 
-inputs = tokenizer.encode(input_text, return_tensors='pt')
+inputs = tokenizer.encode(input_text, return_tensors='pt').to(device)
 
 # 模型预测获得结果，这是一个softmax分类结果
 logits = model(inputs).logits.squeeze(0)

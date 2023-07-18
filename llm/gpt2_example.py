@@ -1,25 +1,28 @@
+import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-tokenizer = AutoTokenizer.from_pretrained("/code/lorne/models/gpt2")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+tokenizer = AutoTokenizer.from_pretrained("gpt2")
+model = AutoModelForCausalLM.from_pretrained("gpt2").to(device)
 
-# print(tokenizer)
 
-model = AutoModelForCausalLM.from_pretrained("/code/lorne/models/gpt2")
+max_length = 120
 
-input_context = "The weather is really nice. " \
-                "The sky is clear. I am very happy today. " \
-                "I am going to go to the park to play."
-input_ids = tokenizer.encode(input_context, return_tensors='pt')
-#
-# dicts = tokenizer.get_vocab()
-# print(dicts)
-# print(input_ids)
+input_context = "你好，我是小明，现在是一名程序员，很高心认识你，听说你曾经也是"
 
-print(model)
+input_ids = tokenizer.encode(input_context, return_tensors='pt').to(device)
 
-# Generate 50 tokens
-output = model.generate(input_ids, max_length=50)
+output = model.generate(input_ids, max_length=max_length,
+                        do_sample=True, top_k=50, top_p=0.95, temperature=0.05)
 
-output_text = tokenizer.decode(output[0], skip_special_tokens=True)
+output_text = tokenizer.decode(output[0], skip_special_tokens=True, clean_up_tokenization_spaces=True)
+
+# Find the index of the first period (.) in the generated text
+period_index = output_text.find("。")
+
+if period_index != -1:
+    output_text = output_text[:period_index+1]  # Include the period in the output
+else:
+    output_text = output_text[:max_length]  # Use maximum length if no period is found
+
 print(output_text)
-

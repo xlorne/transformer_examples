@@ -22,14 +22,14 @@ class MyDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         text = self.text[index]
         input_ids = self.tokenizer.encode(text, add_special_tokens=True, return_tensors="pt")
-        input_ids = input_ids.squeeze(0)
+        input_ids = input_ids.squeeze(0).to(device)
         input_index = input_ids[:-1]
         # input_attention_mask = input_tokenizer['attention_mask'][:-1]
         label = input_ids[1:]
         return {
-            'input_index': torch.tensor(input_index),
+            'input_index': input_index,
             # 'input_attention_mask': torch.tensor(input_attention_mask, dtype=torch.long),
-            'label':  torch.tensor(label)
+            'label':  label
         }
 
     def __len__(self):
@@ -41,20 +41,18 @@ class OptModel(torch.nn.Module):
         super().__init__()
         self.model = AutoModelForCausalLM.from_pretrained("gpt2")
         self.loss_func = nn.CrossEntropyLoss(ignore_index=0)
+        print(self.model)
 
     def forward(self, input_index, label):
-        output1, output2 = self.model(input_index, labels=label, return_dict=False)
-        # outputs = self.model(input_index, labels=label, return_dict=True)
-        # loss = outputs.loss
+        outputs = self.model(input_index, labels=label)
+        # 'outputs' is a tuple, we need the first element which are the logits
+        lm_logits = outputs.logits
         if label is not None:
-            loss = self.loss_func(output1, label)
+            loss = self.loss_func(lm_logits.view(-1, lm_logits.size(-1)), label.view(-1))
             return loss
         else:
-            pred = torch.argmax(output1, dim=-1)
+            pred = torch.argmax(lm_logits, dim=-1)
             return pred
-
-    def predict(self):
-        pass
 
 
 def process(batch_data):
@@ -79,16 +77,16 @@ def process(batch_data):
 train_dataset = MyDataset(texts)
 train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=4, shuffle=True, collate_fn=process)
 
-model = OptModel()
+model = OptModel().to(device)
 optim = torch.optim.Adam(model.parameters(), lr=1e-5)
 epoch = 6
 
 for e in range(epoch):
     for index, data in enumerate(train_dataloader):
-        optim.zero_grad()
         data['input_index'] = data['input_index'].to(device)
-        # data['input_attention_mask'] = data['input_attention_mask'].to(device)
         data['label'] = data['label'].to(device)
+
+        optim.zero_grad()
         loss = model(data['input_index'], data['label'])
         loss.backward()
         optim.step()

@@ -85,7 +85,7 @@ def process(batch_data):
 
 
 batch_size = 12
-epoch = 64
+epoch = 1000
 
 print('Start training...')
 print('Device:', device)

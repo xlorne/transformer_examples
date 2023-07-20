@@ -118,6 +118,6 @@ for e in range(epoch):
     avg_train_loss = train_loss / len(train_dataloader)
     print(f'Average training loss: {avg_train_loss}')
 
-
-
-
+# Save the model
+torch.save(model.state_dict(), 'gpt2_model.pth')
+print('Model saved to gpt2_model.pth')

@@ -52,7 +52,9 @@ class OptModel(torch.nn.Module):
         super().__init__()
         self.model = AutoModelForCausalLM.from_pretrained("gpt2")
         self.loss_func = nn.CrossEntropyLoss(ignore_index=0)
+        print('Model loaded from pretrained gpt2:')
         print(self.model)
+        print("---------------------------------------")
 
     def forward(self, input_index, label):
         outputs = self.model(input_index, labels=label)
@@ -82,7 +84,7 @@ def process(batch_data):
     }
 
 
-batch_size = 16
+batch_size = 12
 epoch = 64
 
 print('Start training...')

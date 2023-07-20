@@ -14,7 +14,7 @@ args = parser.parse_args()
 
 if __name__ == '__main__':
     input_context = args.question
-    max_length = args.length
+    max_length = int(args.length)
     input_ids = tokenizer.encode(input_context, return_tensors='pt')
     input_ids = input_ids.cuda()
     output = model.generate(input_ids, max_length=max_length)

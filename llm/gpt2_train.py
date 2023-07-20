@@ -82,7 +82,7 @@ def process(batch_data):
     }
 
 
-batch_size = 16
+batch_size = 8
 epoch = 64
 
 print('Start training...')

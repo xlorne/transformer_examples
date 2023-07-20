@@ -1,65 +1,98 @@
 import torch
-from torch.nn import DataParallel
+from torch import nn
 from transformers import AutoTokenizer, AutoModelForCausalLM
-
-tokenizer = AutoTokenizer.from_pretrained("gpt2")
-model = AutoModelForCausalLM.from_pretrained("gpt2")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # 读取训练数据集
 with open("train.txt", "r", encoding="utf-8") as file:
-    data = file.read()
+    texts = file.read().split('\n')
+    texts = [item.strip() for item in texts if item.strip() != '']
 
-texts = data.split("\n")
-sentences = [item.strip() for item in texts if item.strip() != '']
-print(len(sentences))
 
-# 将文本转换为模型可接受的编码
-input_ids = [tokenizer.encode(sentence, add_special_tokens=True) for sentence in sentences]
-max_length = max(len(ids) for ids in input_ids)
-print(max_length)
+max_length = 1024
 
-input_ids = [ids + [tokenizer.pad_token_id] * (max_length - len(ids)) for ids in input_ids]
-input_ids = torch.tensor(input_ids)
-print(input_ids.shape)
 
-# 将模型设置为训练模式
-model.train()
-model = model.to(device)
+class MyDataset(torch.utils.data.Dataset):
+    def __init__(self, text):
+        super().__init__()
+        self.tokenizer = AutoTokenizer.from_pretrained("gpt2")
+        self.text = text
 
-# 将模型包装在DataParallel中
-model = DataParallel(model)
+    def __getitem__(self, index):
+        text = self.text[index]
+        input_ids = self.tokenizer.encode(text, add_special_tokens=True, return_tensors="pt")
+        input_ids = input_ids.squeeze(0)
+        input_index = input_ids[:-1]
+        # input_attention_mask = input_tokenizer['attention_mask'][:-1]
+        label = input_ids[1:]
+        return {
+            'input_index': torch.tensor(input_index),
+            # 'input_attention_mask': torch.tensor(input_attention_mask, dtype=torch.long),
+            'label':  torch.tensor(label)
+        }
 
-# 定义优化器和损失函数
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
-loss_fn = torch.nn.CrossEntropyLoss()
+    def __len__(self):
+        return len(self.text)
 
-# 训练循环
-num_epochs = 10
-batch_size = 8
 
-for epoch in range(num_epochs):
-    epoch_loss = 0.0
+class OptModel(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.model = AutoModelForCausalLM.from_pretrained("gpt2")
+        self.loss_func = nn.CrossEntropyLoss(ignore_index=0)
 
-    for i in range(0, len(input_ids), batch_size):
-        batch_inputs = input_ids[i:i+batch_size].to(device)
+    def forward(self, input_index, label):
+        output1, output2 = self.model(input_index, labels=label, return_dict=False)
+        # outputs = self.model(input_index, labels=label, return_dict=True)
+        # loss = outputs.loss
+        if label is not None:
+            loss = self.loss_func(output1, label)
+            return loss
+        else:
+            pred = torch.argmax(output1, dim=-1)
+            return pred
 
-        # 清除之前计算的梯度
-        optimizer.zero_grad()
+    def predict(self):
+        pass
 
-        # 前向传播
-        outputs = model(batch_inputs, labels=batch_inputs)
-        loss = outputs.loss
-        epoch_loss += loss.item()
 
-        # 反向传播和参数更新
+def process(batch_data):
+    input_index = torch.nn.utils.rnn.pad_sequence([item['input_index'] for item in batch_data],
+                                                  batch_first=True,
+                                                  padding_value=0)
+    # input_attention_mask = torch.nn.utils.rnn.pad_sequence([item['input_attention_mask'] for item in batch_data],
+    #                                                        batch_first=True, padding_value=0)
+    label = torch.nn.utils.rnn.pad_sequence([item['label'] for item in batch_data],
+                                            batch_first=True,
+                                            padding_value=0)
+    input_index = input_index.to(device)
+    # input_attention_mask = input_attention_mask.to(device)
+    label = label.to(device)
+    return {
+        'input_index': input_index,
+        # 'input_attention_mask': input_attention_mask,
+        'label': label
+    }
+
+
+train_dataset = MyDataset(texts)
+train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=4, shuffle=True, collate_fn=process)
+
+model = OptModel()
+optim = torch.optim.Adam(model.parameters(), lr=1e-5)
+epoch = 6
+
+for e in range(epoch):
+    for index, data in enumerate(train_dataloader):
+        optim.zero_grad()
+        data['input_index'] = data['input_index'].to(device)
+        # data['input_attention_mask'] = data['input_attention_mask'].to(device)
+        data['label'] = data['label'].to(device)
+        loss = model(data['input_index'], data['label'])
         loss.backward()
-        optimizer.step()
+        optim.step()
 
-    # 输出每个epoch的损失
-    print(f"Epoch {epoch + 1} Loss: {epoch_loss / len(input_ids)}")
+        print(f'loss:{loss.item()}')
 
-# 保存训练好的模型
-model.module.save_pretrained("trained_model")
-tokenizer.save_pretrained("trained_model")
+

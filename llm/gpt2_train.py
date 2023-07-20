@@ -82,8 +82,13 @@ def process(batch_data):
     }
 
 
-batch_size = 4
-epoch = 6
+batch_size = 16
+epoch = 64
+
+print('Start training...')
+print('Device:', device)
+print('Batch size:', batch_size)
+print('Epoch:', epoch)
 
 train_dataset = MyDataset(texts)
 train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=process)

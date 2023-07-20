@@ -1,16 +1,29 @@
 import torch
 from torch import nn
+from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModelForCausalLM
+from tqdm import tqdm
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+max_line_length = 400
+
 # 读取训练数据集
 with open("train.txt", "r", encoding="utf-8") as file:
-    texts = file.read().split('\n')
-    texts = [item.strip() for item in texts if item.strip() != '']
-
-
-max_length = 1024
+    data = file.read().split('\n')
+    texts = []
+    current = ''
+    for line in data:
+        line = line.strip()
+        if line != '':
+            current += line
+            if len(current) > max_line_length:
+                pre = current[:max_line_length]
+                texts.append(pre)
+                current = current[max_line_length:]
+    if len(current) > 0:
+        texts.append(current)
 
 
 class MyDataset(torch.utils.data.Dataset):
@@ -24,11 +37,9 @@ class MyDataset(torch.utils.data.Dataset):
         input_ids = self.tokenizer.encode(text, add_special_tokens=True, return_tensors="pt")
         input_ids = input_ids.squeeze(0).to(device)
         input_index = input_ids[:-1]
-        # input_attention_mask = input_tokenizer['attention_mask'][:-1]
         label = input_ids[1:]
         return {
             'input_index': input_index,
-            # 'input_attention_mask': torch.tensor(input_attention_mask, dtype=torch.long),
             'label':  label
         }
 
@@ -59,13 +70,10 @@ def process(batch_data):
     input_index = torch.nn.utils.rnn.pad_sequence([item['input_index'] for item in batch_data],
                                                   batch_first=True,
                                                   padding_value=0)
-    # input_attention_mask = torch.nn.utils.rnn.pad_sequence([item['input_attention_mask'] for item in batch_data],
-    #                                                        batch_first=True, padding_value=0)
     label = torch.nn.utils.rnn.pad_sequence([item['label'] for item in batch_data],
                                             batch_first=True,
                                             padding_value=0)
     input_index = input_index.to(device)
-    # input_attention_mask = input_attention_mask.to(device)
     label = label.to(device)
     return {
         'input_index': input_index,
@@ -74,15 +82,24 @@ def process(batch_data):
     }
 
 
-train_dataset = MyDataset(texts)
-train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=4, shuffle=True, collate_fn=process)
-
-model = OptModel().to(device)
-optim = torch.optim.Adam(model.parameters(), lr=1e-5)
+batch_size = 4
 epoch = 6
 
+train_dataset = MyDataset(texts)
+train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=process)
+
+model = OptModel().to(device)
+model = model.train()
+
+optim = torch.optim.Adam(model.parameters(), lr=1e-5)
+
+
 for e in range(epoch):
-    for index, data in enumerate(train_dataloader):
+    # Training loop
+    model.train()
+    train_loss = 0
+    progress_bar = tqdm(train_dataloader, desc='Training', position=0, leave=True)
+    for data in progress_bar:
         data['input_index'] = data['input_index'].to(device)
         data['label'] = data['label'].to(device)
 
@@ -91,6 +108,11 @@ for e in range(epoch):
         loss.backward()
         optim.step()
 
-        print(f'loss:{loss.item()}')
+        train_loss += loss.item()
+        progress_bar.set_postfix({'training_loss': '{:.3f}'.format(loss.item()/len(data['input_index']))})
+    avg_train_loss = train_loss / len(train_dataloader)
+    print(f'Average training loss: {avg_train_loss}')
+
+
 
 

@@ -105,6 +105,7 @@ for e in range(epoch):
     # Training loop
     model.train()
     train_loss = 0
+    print(f'Epoch {e+1}/{epoch}')
     progress_bar = tqdm(train_dataloader, desc='Training', position=0, leave=True)
     for data in progress_bar:
         data['input_index'] = data['input_index'].to(device)

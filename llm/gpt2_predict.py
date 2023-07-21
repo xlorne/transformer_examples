@@ -1,9 +1,13 @@
+import argparse
+
 import torch
 from torch import nn
-from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from tqdm import tqdm
 
+parser = argparse.ArgumentParser(description="Predict Argparse")
+parser.add_argument("--question", "-q", help="问题内容")
+parser.add_argument("--length", "-l", help="输出问题长度", default=100)
+args = parser.parse_args()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 tokenizer = AutoTokenizer.from_pretrained("gpt2")
@@ -41,12 +45,14 @@ model.load_state_dict(torch.load('gpt2_model.pth'))
 model.eval()
 
 
-input_context = "诸葛亮与周瑜在赤壁之战交流了什么?"
+if __name__ == '__main__':
+    input_context = args.question
+    max_length = int(args.length)
 
-input_ids = tokenizer.encode(input_context, return_tensors='pt').to(device)
+    input_ids = tokenizer.encode(input_context, return_tensors='pt').to(device)
 
-output = model.generate(input_ids, max_length=50)
+    output = model.generate(input_ids, max_length=max_length)
 
-output_text = tokenizer.decode(output[0], skip_special_tokens=True, clean_up_tokenization_spaces=True)
+    output_text = tokenizer.decode(output[0], skip_special_tokens=True, clean_up_tokenization_spaces=True)
 
-print(output_text)
+    print(output_text)

@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
     input_ids = tokenizer.encode(input_context, return_tensors='pt').to(device)
 
-    output = model.generate(input_ids, max_length=max_length,do_sample=do_sample, top_k=top_k, top_p=top_p,
+    output = model.generate(input_ids, max_length=max_length, do_sample=do_sample, top_k=top_k, top_p=top_p,
                             temperature=temperature)
 
     output_text = tokenizer.decode(output[0], skip_special_tokens=True, clean_up_tokenization_spaces=True)

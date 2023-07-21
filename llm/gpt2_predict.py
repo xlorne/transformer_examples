@@ -7,6 +7,11 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 parser = argparse.ArgumentParser(description="Predict Argparse")
 parser.add_argument("--question", "-q", help="问题内容")
 parser.add_argument("--length", "-l", help="输出问题长度", default=100)
+parser.add_argument("--top_k", "-k", help="top_k", default=50)
+parser.add_argument("--top_p", "-p", help="top_p", default=0.95)
+parser.add_argument("--temperature", "-t", help="temperature", default=0.05)
+parser.add_argument("--do_sample", "-s", help="do_sample", default=True)
+
 args = parser.parse_args()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -18,9 +23,6 @@ class OptModel(torch.nn.Module):
         super().__init__()
         self.model = AutoModelForCausalLM.from_pretrained("gpt2")
         self.loss_func = nn.CrossEntropyLoss(ignore_index=0)
-        print('Model loaded from pretrained gpt2:')
-        print(self.model)
-        print("---------------------------------------")
 
     def forward(self, input_index, label):
         outputs = self.model(input_index, labels=label)
@@ -48,10 +50,15 @@ model.eval()
 if __name__ == '__main__':
     input_context = args.question
     max_length = int(args.length)
+    top_k = int(args.top_k)
+    top_p = float(args.top_p)
+    temperature = float(args.temperature)
+    do_sample = bool(args.do_sample)
 
     input_ids = tokenizer.encode(input_context, return_tensors='pt').to(device)
 
-    output = model.generate(input_ids, max_length=max_length)
+    output = model.generate(input_ids, max_length=max_length,do_sample=do_sample, top_k=top_k, top_p=top_p,
+                            temperature=temperature)
 
     output_text = tokenizer.decode(output[0], skip_special_tokens=True, clean_up_tokenization_spaces=True)
 

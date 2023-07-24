@@ -61,8 +61,7 @@ class OptModel(torch.nn.Module):
         # 'outputs' is a tuple, we need the first element which are the logits
         lm_logits = outputs.logits
         if label is not None:
-            loss = self.loss_func(lm_logits.view(-1, lm_logits.size(-1)), label.view(-1))
-            return loss
+            return outputs.loss
         else:
             pred = torch.argmax(lm_logits, dim=-1)
             return pred

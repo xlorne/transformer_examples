@@ -116,6 +116,8 @@ for e in range(epoch):
 
         optim.zero_grad()
         loss = model(data['input_index'], data['label'])
+        if torch.cuda.device_count() > 1:
+            loss = torch.mean(loss)  # 取平均，使损失变成标量
         loss.backward()
         optim.step()
 
